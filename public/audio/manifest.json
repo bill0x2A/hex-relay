@@ -2,27 +2,32 @@
   "music": {
     "menu": {
       "file": "menu.mp3",
-      "bpm": 120,
+      "bpm": 121.235985,
       "bars": 16
     },
     "solo-normal": {
       "file": "solo-normal.mp3",
-      "bpm": 140,
+      "bpm": 144.387981,
       "bars": 32
     },
     "solo-hard": {
       "file": "solo-hard.mp3",
-      "bpm": 160,
+      "bpm": 159.991988,
       "bars": 32
     },
     "battle-base": {
       "file": "battle-base.mp3",
-      "bpm": 150,
+      "bpm": 149.955968,
       "bars": 32
     },
     "battle-danger": {
       "file": "battle-danger.mp3",
-      "bpm": 150,
+      "bpm": 149.955968,
+      "bars": 32
+    },
+    "solo-hyper": {
+      "file": "solo-hyper.mp3",
+      "bpm": 168.004,
       "bars": 32
     }
   },

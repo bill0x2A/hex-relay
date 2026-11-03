@@ -15,7 +15,7 @@ const ENTRIES = [
   { id: 'solo-hard', name: 'SOLO', sub: 'HARD', mode: 'solo', difficulty: 'hard', music: 'solo-hard',
     help: 'Faster walls, single gaps, tunnels, and a changing center.',
     palette: { bg: ['#1a1112', '#24171a'], walls: ['#e0604f', '#e09a4f', '#d94f8a', '#e0c04f'], center: '#331c1f', edge: '#e08a7a' } },
-  { id: 'solo-hyper', name: 'SOLO', sub: 'HYPER', mode: 'solo', difficulty: 'hyper', music: 'solo-hard',
+  { id: 'solo-hyper', name: 'SOLO', sub: 'HYPER', mode: 'solo', difficulty: 'hyper', music: 'solo-hyper',
     help: 'The fastest walls. The center turns into a pentagon and a square.',
     palette: { bg: ['#16101c', '#21162a'], walls: ['#f2f2f2', '#ff4fd8', '#4fe8ff', '#ffe14d'], center: '#2a1d33', edge: '#ffffff' } },
   { id: 'cpu-battle', name: 'BATTLE', sub: 'VS CPU', mode: 'cpu', battle: true, difficulty: 'normal', music: 'battle-base',
@@ -93,6 +93,8 @@ const sound = {
   async playMusic(name, restart = false) {
     this.wanted = name;
     if (!this.ctx || !this.manifest) return;
+    // HYPER has its own slot; without it, HYPER uses the hard track.
+    if (name === 'solo-hyper' && !this.manifest.music?.[name]) name = 'solo-hard';
     if (this.track?.name === name && !restart) return;
     const info = this.manifest.music?.[name];
     const old = [this.track, this.danger];
@@ -204,7 +206,7 @@ function beginRound(s) {
   $('spectating').hidden = true; $('centerMessage').textContent = '';
   setView('playing'); updateHUD();
   sound.muffle(false);
-  const track = battle ? 'battle-base' : s.difficulty === 'normal' ? 'solo-normal' : 'solo-hard';
+  const track = battle ? 'battle-base' : `solo-${s.difficulty}`;
   sound.playMusic(track); sound.sfx('start');
 }
 function startLocal(rematch = false) {

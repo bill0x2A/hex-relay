@@ -51,3 +51,14 @@ difference at every bar line inside the file for reference).
 
 The same generators are in the Neuron repo at `projects/`. Edit one copy and copy it to the
 other (`build.py` runs the copies here).
+
+## Songs from another source (for example Suno)
+
+`import-suno.py` turns full songs into the game's loops. It finds the tempo and beat grid, picks a strong section of exact length where the tempo is steady (Suno songs often speed up slowly), crossfades the seam, matches the loudness, encodes gapless MP3s, and updates `public/audio/manifest.json`.
+
+```sh
+uv run music/import-suno.py menu=~/Downloads/squarewavegroove.mp3 solo-normal=~/Downloads/arcadesurvival.mp3 \
+  solo-hard=~/Downloads/untitled.mp3 solo-hyper=~/Downloads/hyper.mp3 battle=~/Downloads/versusfight.mp3
+```
+
+Add `--dry-run` to see the tempo and section without writing files. `battle` writes both battle files; with no stems, the danger layer is the upper band of the same section. `solo-hyper` is optional: without it, HYPER plays the hard track. `git checkout public/audio` restores the Neuron tracks.
