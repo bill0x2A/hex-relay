@@ -572,7 +572,9 @@ const store = {
 };
 
 // ---------------------------------------------------------------- menu entries
-const ENTRIES = [
+// Static hosting (GitHub Pages) and the offline file have no game server: no online rooms.
+const SERVERLESS = location.protocol === 'file:' || !!globalThis.HEX_STATIC;
+const ALL_ENTRIES = [
   { id: 'solo-normal', name: 'SOLO', sub: 'NORMAL', mode: 'solo', difficulty: 'normal', music: 'solo-normal',
     help: 'Survive as long as you can. Reach 60 seconds to clear it.',
     palette: { bg: ['#14151c', '#1a1a26'], walls: ['#8870ba', '#5b98a4', '#b06e86', '#7b9a54'], center: '#282333', edge: '#a38bc8' } },
@@ -595,6 +597,7 @@ const ENTRIES = [
     help: 'Classic rooms for 2–8 players, or a battle room for 2.',
     palette: { bg: ['#101318', '#161b23'], walls: ['#5de5ef', '#bda1ff', '#d4ff57', '#ff947a'], center: '#1c2430', edge: '#7fe8f0' } },
 ];
+const ENTRIES = ALL_ENTRIES.filter(e => !(SERVERLESS && e.mode === 'online'));
 let entryIndex = Math.max(0, ENTRIES.findIndex(e => e.id === store.get('entry', 'solo-normal')));
 const entry = () => ENTRIES[entryIndex];
 
@@ -831,7 +834,7 @@ function connect() {
 }
 function onSnapshot(s) {
   const isNew = !state || s.seed !== state.seed || state.mode !== s.mode;
-  if (isNew) { mode = 'online'; roundPalette = ENTRIES.find(e => e.id === 'online').palette; beginRound(s); }
+  if (isNew) { mode = 'online'; roundPalette = ALL_ENTRIES.find(e => e.id === 'online').palette; beginRound(s); }
   else if (s.t > state.t) {
     const dt = s.t - state.t;
     for (const p of s.players) {
@@ -1446,7 +1449,7 @@ function frame(now) {
 $('playerName').value = store.get('name', 'Player');
 refreshSettings(); refreshEntry(); resize();
 const inviteCode = new URLSearchParams(location.search).get('room');
-if (inviteCode && /^[A-Z2-9]{5}$/i.test(inviteCode)) {
+if (inviteCode && /^[A-Z2-9]{5}$/i.test(inviteCode) && !SERVERLESS) {
   entryIndex = ENTRIES.findIndex(e => e.id === 'online'); refreshEntry(); mode = 'online'; setView('online');
   $('roomCode').value = inviteCode.toUpperCase();
 }
