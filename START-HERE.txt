@@ -1,0 +1,25 @@
+HEX RELAY — START HERE
+
+FASTEST: NO INSTALLATION
+1. Extract this ZIP completely.
+2. Double-click PLAY-OFFLINE.html.
+3. Press left/right to choose a mode. Press Space to start.
+
+Controls:
+Solo: left/right arrows or A/D.
+Battle vs CPU: left/right to turn, Up / W / Space to fire an item.
+Local battle and duel: Player 1 A/D (fire W), Player 2 left/right arrows (fire Up).
+P pauses. Escape returns to the menu.
+
+NETWORK MULTIPLAYER (2–8 players classic, 2 players battle)
+Requires Node.js 22 or newer: https://nodejs.org/
+Windows: double-click start.cmd.
+Mac: run sh start.command in Terminal from this folder.
+Linux: run sh start.sh in Terminal from this folder.
+Or run: node server.mjs
+Then open http://localhost:8080
+Choose Online, create a room, and share the server's LAN address and room code.
+
+PLAY-OFFLINE.html contains the complete solo/local game and needs no server.
+Online rooms require the Node server included in this same folder.
+See README.md for hosting and full controls.

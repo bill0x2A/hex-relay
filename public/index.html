@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111317">
+  <meta name="description" content="A fast hexagonal arcade game. Survive alone, or battle a rival with items.">
+  <title>HEX RELAY</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/client.mjs"></script>
+</head>
+<body>
+  <div id="arena"><canvas id="canvas" aria-label="Hexagonal arena. Move with left and right arrow keys or A and D."></canvas></div>
+
+  <div class="corner corner-left" id="wordmark" aria-hidden="true">HEX<b>RELAY</b></div>
+  <div class="corner corner-right tools">
+    <button id="soundButton" class="tool" aria-pressed="false" title="Sound (M)">♪<span class="sr-only">Sound</span></button>
+    <button id="motionButton" class="tool" aria-pressed="false" title="Reduce motion">◌<span class="sr-only">Reduce motion</span></button>
+    <button id="fullscreenButton" class="tool" title="Fullscreen (F)">⛶<span class="sr-only">Fullscreen</span></button>
+    <button id="howButton" class="tool" title="How to play (H)">?<span class="sr-only">How to play</span></button>
+  </div>
+
+  <section id="menu" class="overlay menu" aria-label="Main menu">
+    <div class="selector">
+      <button id="prevEntry" class="arrow" aria-label="Previous mode">◀</button>
+      <div class="entry" aria-live="polite">
+        <div id="entryName" class="entry-name">SOLO</div>
+        <div id="entrySub" class="entry-sub">NORMAL</div>
+      </div>
+      <button id="nextEntry" class="arrow" aria-label="Next mode">▶</button>
+    </div>
+    <div id="entryBest" class="entry-best">BEST 00.00</div>
+    <p id="entryHelp" class="entry-help"></p>
+    <button id="playButton" class="start-hint">SPACE TO START</button>
+  </section>
+
+  <section id="onlinePanel" class="overlay panel" aria-label="Online" hidden>
+    <div class="entry-name small">ONLINE</div>
+    <label class="field-label" for="playerName">NAME</label>
+    <input id="playerName" maxlength="18" autocomplete="nickname" placeholder="Player" value="Player">
+    <div class="row">
+      <button id="createButton" class="pill">CREATE ROOM</button>
+      <label class="sr-only" for="roomCode">Five-character room code</label>
+      <input id="roomCode" maxlength="5" autocomplete="off" placeholder="CODE">
+      <button id="joinButton" class="pill">JOIN</button>
+    </div>
+    <p class="panel-help">Needs the Node server. Other players open this server's address.</p>
+    <button id="onlineBack" class="link">ESC BACK</button>
+  </section>
+
+  <section id="roomPanel" class="overlay panel room" aria-label="Room" hidden>
+    <div class="room-code-label">ROOM <button id="copyButton" class="link">COPY INVITE</button></div>
+    <div id="displayCode" class="display-code">—</div>
+    <div class="row toggles">
+      <button id="modeClassic" class="pill" data-mode="classic">CLASSIC</button>
+      <button id="modeBattle" class="pill" data-mode="battle">BATTLE 1V1</button>
+      <button id="diffNormal" class="pill" data-difficulty="normal">NORMAL</button>
+      <button id="diffHard" class="pill" data-difficulty="hard">HARD</button>
+      <button id="diffHyper" class="pill" data-difficulty="hyper">HYPER</button>
+    </div>
+    <ul id="roster" class="roster"></ul>
+    <p id="roomStatus" class="room-status" role="status">Waiting for players…</p>
+    <button id="startButton" class="start-hint">SPACE TO START</button>
+    <button id="leaveButton" class="link">ESC LEAVE ROOM</button>
+  </section>
+
+  <div id="hud" hidden>
+    <div class="hud-left"><div id="timer" class="timer">00<span>.00</span></div><div id="stage" class="hud-stage"></div></div>
+    <div class="hud-right"><div id="playerLegend" class="player-legend"></div><div id="connectionStats" class="connection-stats"></div></div>
+    <div id="centerMessage" class="center-message" aria-live="polite"></div>
+    <div id="spectating" class="spectating" hidden>YOU'RE OUT <span>WATCH THE SURVIVORS</span></div>
+  </div>
+
+  <section id="results" class="overlay results" aria-labelledby="resultTitle" hidden>
+    <h2 id="resultTitle">GAME OVER</h2>
+    <div id="resultTime" class="result-time">00.00</div>
+    <div id="resultSubtitle" class="result-sub"></div>
+    <ul id="resultScores" class="result-scores"></ul>
+    <button id="retryButton" class="start-hint">SPACE TO PLAY AGAIN</button>
+    <button id="backButton" class="link">ESC MENU</button>
+  </section>
+
+  <div id="touchControls" class="touch-controls" hidden>
+    <button id="touchLeft" aria-label="Turn left">◀</button>
+    <button id="touchFire" aria-label="Fire item" hidden>FIRE</button>
+    <button id="touchRight" aria-label="Turn right">▶</button>
+  </div>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <div id="fps" class="fps" aria-hidden="true"></div>
+
+  <dialog id="helpDialog">
+    <button id="closeHelp" class="close-dialog" aria-label="Close instructions">×</button>
+    <h2>HOW TO PLAY</h2>
+    <p>Your triangle orbits the hexagon. Turn left or right to stay in the openings. A wall that reaches you from the front ends a solo run. The side of a wall only stops you.</p>
+    <dl>
+      <dt>MENU</dt><dd><kbd>←</kbd> <kbd>→</kbd> choose · <kbd>Space</kbd> start · <kbd>Esc</kbd> back</dd>
+      <dt>SOLO / ONLINE</dt><dd><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd> · fire <kbd>↑</kbd> <kbd>W</kbd> or <kbd>Space</kbd></dd>
+      <dt>LOCAL PLAYER 1</dt><dd><kbd>A</kbd> <kbd>D</kbd> · fire <kbd>W</kbd></dd>
+      <dt>LOCAL PLAYER 2</dt><dd><kbd>←</kbd> <kbd>→</kbd> · fire <kbd>↑</kbd></dd>
+      <dt>PAUSE</dt><dd><kbd>P</kbd></dd>
+    </dl>
+    <p><b>Battle</b> is 1v1. Each player has an arena with the same walls and 3 hit points. Pass through a glowing pickup to get an item. Fire it to attack your rival's arena or to help your own. An attack shows a warning first. Fire an attack of your own during the warning to counter it. A lock stops your triangle: press left and right in turn to break it.</p>
+    <p class="help-small">The motion button stops the spin, the tilt, and the pulse.</p>
+    <button id="gotIt" class="start-hint">GOT IT</button>
+  </dialog>
+</body>
+</html>

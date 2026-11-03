@@ -1,0 +1,43 @@
+{
+  "music": {
+    "menu": {
+      "file": "menu.mp3",
+      "bpm": 120,
+      "bars": 16
+    },
+    "solo-normal": {
+      "file": "solo-normal.mp3",
+      "bpm": 140,
+      "bars": 32
+    },
+    "solo-hard": {
+      "file": "solo-hard.mp3",
+      "bpm": 160,
+      "bars": 32
+    },
+    "battle-base": {
+      "file": "battle-base.mp3",
+      "bpm": 150,
+      "bars": 32
+    },
+    "battle-danger": {
+      "file": "battle-danger.mp3",
+      "bpm": 150,
+      "bars": 32
+    }
+  },
+  "sfx": {
+    "select": "select.wav",
+    "start": "start.wav",
+    "pickup": "pickup.wav",
+    "fire": "fire.wav",
+    "warning": "warning.wav",
+    "hit": "hit.wav",
+    "shield": "shield.wav",
+    "death": "death.wav",
+    "lock": "lock.wav",
+    "win": "win.wav",
+    "heal": "heal.wav",
+    "graze": "graze.wav"
+  }
+}
