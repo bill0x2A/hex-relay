@@ -106,7 +106,7 @@ export function snapshot(state) {
     ...state,
     arenas: state.arenas.map(a => ({
       walls: a.walls.map(w => ({ id: w.id, radius: w.radius, thickness: w.thickness, mask: w.mask })),
-      pickups: a.pickups, rotation: a.rotation, speed: a.speed, fogUntil: a.fogUntil, sides: a.sides,
+      pickups: a.pickups, rotation: a.rotation, speed: a.speed, fogUntil: a.fogUntil, sides: a.sides, morph: a.morph,
     })),
   } }, round4);
 }

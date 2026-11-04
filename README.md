@@ -43,10 +43,10 @@ The menu is the arena. **← / →** choose a mode, **Space** or **Enter** start
 Standard gamepads work: left stick or D-pad to turn, A (or D-pad up) to fire. Touch devices get left, right, and fire buttons.
 
 - **Front hits and side contact.** A wall that reaches the triangle from outside is a hit. The side of a wall only stops the triangle.
-- **Patterns.** Walls come in hand-written patterns (spirals, ladders, alternating gaps, zig-zags, tunnels), turned and mirrored at random. Spacing follows the wall speed, so every pattern always has a way through.
+- **Patterns.** Walls come in hand-written patterns (spirals, whirls, corkscrews, ladders, swings, hops, zig-zags, tunnels, and chunky slabs, blocks, and corridors), turned and mirrored at random. Each row gives just the time its turn needs, from the worst position, plus a small slack. Each speed step makes the walls faster and the slack smaller. HYPER ends at exactly enough time, so it is hard but always has a way through. `node scripts/measure-difficulty.mjs` measures each difficulty with bots.
 - **Solo** is endless. Speed steps up every 10 seconds, and 60 seconds marks the run as cleared. Bests are stored for each difficulty in your browser. A run starts at once; Space restarts immediately after a crash.
 - **Spin.** The arena turns, reverses, and bursts. A slow tilt and a beat pulse follow the music.
-- **Shapes.** On hard and hyper, the center changes between a hexagon, a pentagon, and a square. A change waits until the field is empty.
+- **Shapes.** On hard and hyper, the center changes between a hexagon, a pentagon, and a square. A change starts at the end of a pattern: one lane shrinks to nothing (or a new lane grows) while no wall is at the orbit, so the walls stay and the change is fair.
 - **Difficulty.** Normal, hard, and hyper. Online hosts choose it in the lobby. `?autoplay` lets the bot fly solo runs as a demo.
 - **P** pauses local play. Switching tabs also pauses it. Online rounds continue when your tab is hidden.
 - **Sound** is off at first (M toggles it). The motion button stops the spin, tilt, pulse, and trails; reduced-motion OS preferences are respected by default.

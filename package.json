@@ -5,6 +5,6 @@
   "type": "module",
   "description": "A zero-dependency hexagonal arcade game with a 1v1 battle mode",
   "engines": { "node": ">=22" },
-  "scripts": { "start": "node server.mjs", "test": "node --test", "check": "node --check server.mjs && node --check public/client.mjs && node --check public/engine.mjs && node --check scripts/build-offline.mjs && node --check scripts/build-pages.mjs", "build:offline": "node scripts/build-offline.mjs", "build:pages": "node scripts/build-pages.mjs" },
+  "scripts": { "start": "node server.mjs", "test": "node --test", "check": "node --check server.mjs && node --check public/client.mjs && node --check public/engine.mjs && node --check scripts/build-offline.mjs && node --check scripts/build-pages.mjs", "build:offline": "node scripts/build-offline.mjs", "build:pages": "node scripts/build-pages.mjs", "measure": "node scripts/measure-difficulty.mjs" },
   "license": "MIT"
 }

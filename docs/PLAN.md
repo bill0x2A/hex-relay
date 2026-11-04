@@ -74,6 +74,29 @@ Attacks wait 1.2 s as incoming. Firing an attack while one is incoming to you is
 - **Shape changes.** An arena has 4, 5, or 6 sides. Hard cycles 6 → 5 → 6 → 4 every 25 s; HYPER cycles 6 → 5 → 4 → 5 → 6 → 4 every 15 s. A change waits for the end of a pattern and an empty field.
 - **A third difficulty, HYPER**, in solo and in online rooms.
 
+## Difficulty pass (2026-11-04)
+
+Bill cleared 180 s of HYPER on the first try. His best on the hardest level of the reference game is 46 s.
+
+- **Faster walls now give less time.** Before, the row gap grew with the speed, so the time for each row never changed. Now the margin goes from `margin` to `marginEnd` over the speed steps.
+- **No free rest between patterns.** A pause row kept the old route but reset the free sectors, so the next row got a worst-case gap. The pause also shrinks: NORMAL 30 px, HARD 10 px, HYPER 0.
+- **Rows that force a turn.** `pairs` and `zigzag` had a sector that stayed open. New patterns: `whirl` (long one-wide spiral), `swing` (gap jumps to the far side), `hop` (gap moves two sectors), `rattle` (fast left and right).
+- **Fair corners.** A wall reaches the orbit sooner at the middle of a side than at a corner. The gap now adds this distance, about 38 px on a square. The old slack hid this error.
+- **Faster base speed and spin.** NORMAL 165, HARD 220, HYPER 290 px/s. Spin reversals and bursts come more often on harder levels.
+
+| | speed | margin | slack | pause | spin |
+|---|---|---|---|---|---|
+| NORMAL | 165 | 1.45 → 1.22 | 0.06 s | 30 px | 0.6 |
+| HARD | 220 | 1.2 → 1.06 | 0.04 s | 10 px | 1.0 |
+| HYPER | 290 | 1.08 → 1.0 | 0.025 s | 0 | 1.5 |
+
+## Chunky patterns, corkscrew, smooth shapes (2026-11-04)
+
+- **Chunky patterns.** `slabs` (half the arena in one thick block, then the other half), `chunks` (big blocks of random depth; each covers the last gap), `corridor` (a thick bending corridor with a one-wide gap).
+- **Corkscrew.** A solid spiral arm of chain rows, two or three full turns. Hold one direction: side contact against the arm sets the pace. It lasts about 4 to 5 s on HYPER.
+- **5% harder.** Speed +5%, margin and slack −5%, spin +5%. HYPER ends at margin 1, because a lower margin makes rows impossible. So on HYPER the 5% comes from speed, spin, and the start margin.
+- **Smooth shape changes.** `geometry(arena)` gives each sector a start angle and a width. In a morph, each sector edge moves from its old angle to its new angle in 0.6 s. A sector that goes away shrinks to zero width, and a new sector grows from zero width. 4 ↔ 6 moves two sectors on opposite sides. The morph runs after the last old row passes the orbit, and before the first new row arrives. The first new row gives a turn from any sector.
+
 ## Open
 
 - Balance from human playtests. The numbers come from bot runs; tune `DIFFICULTY` in `public/engine.mjs`.

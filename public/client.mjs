@@ -1,4 +1,4 @@
-import { TAU, SECTOR, ORBIT, TURN_SPEED, STEP, COLORS, ITEMS, MAX_HP, LOCK_PRESSES, wrap, angleDelta, hexFactor, apothem, collides, createRound, stepRound, botInput, speedSteps } from './engine.mjs';
+import { TAU, SECTOR, ORBIT, TURN_SPEED, STEP, COLORS, ITEMS, MAX_HP, LOCK_PRESSES, wrap, angleDelta, hexFactor, apothem, collides, geometry, laneLayout, laneMid, createRound, stepRound, botInput, speedSteps } from './engine.mjs';
 
 const $ = id => document.getElementById(id);
 const canvas = $('canvas'), ctx = canvas.getContext('2d', { alpha: false });
@@ -50,7 +50,7 @@ let soundEnabled = store.get('sound', 'false') === 'true';
 let frames = 0, fpsAt = performance.now();
 const keys = new Set(), touch = new Set(), firePressed = new Set(), padFire = [false, false];
 const trails = new Map(), remoteVelocities = new Map(), previousAngles = new Map(), previousRotations = [];
-const shakes = new Map(), banners = new Map(), shapeChanges = new Map();
+const shakes = new Map(), banners = new Map();
 let spinVelocities = [];
 
 function toast(message) {
@@ -204,7 +204,7 @@ function beginRound(s) {
   battle = s.mode === 'battle';
   predictedAngle = s.players.find(p => p.id === myId)?.angle ?? Math.PI / 2;
   keys.clear(); touch.clear(); firePressed.clear(); trails.clear(); remoteVelocities.clear(); previousAngles.clear();
-  shakes.clear(); banners.clear(); shapeChanges.clear(); spinVelocities = []; previousRotations.length = 0;
+  shakes.clear(); banners.clear(); spinVelocities = []; previousRotations.length = 0;
   lastEventSeq = s.eventSeq || 0;
   $('spectating').hidden = true; $('centerMessage').textContent = '';
   setView('playing'); updateHUD();
@@ -372,7 +372,7 @@ function handleEvents() {
       sound.sfx('death'); shakes.set(e.id, performance.now());
       if (e.id === myId || state.players.length === 1) { deathAt = performance.now(); sound.muffle(true); }
     }
-    if (e.type === 'shape') { shapeChanges.set(e.arena, performance.now()); sound.sfx('start', 0.7); }
+    if (e.type === 'shape') sound.sfx('start', 0.7);
     if (e.type === 'cleared' && (e.id === myId) && who) toast('60 SECONDS · CLEARED. KEEP GOING.');
   }
 }
@@ -580,21 +580,23 @@ function resize() {
 }
 new ResizeObserver(resize).observe($('arena'));
 window.addEventListener('resize', resize);
-function hexPath(radius, n = 6) {
+// g: a side count, or a lane layout during a shape change (see geometry() in the engine).
+function hexPath(radius, g = 6) {
+  const { n, start } = laneLayout(g);
   ctx.beginPath();
   for (let i = 0; i < n; i++) {
-    const a = i * TAU / n;
+    const a = start[i];
     if (!i) ctx.moveTo(Math.cos(a) * radius, Math.sin(a) * radius); else ctx.lineTo(Math.cos(a) * radius, Math.sin(a) * radius);
   }
   ctx.closePath();
 }
-function drawWall(mask, radius, thickness, color, n = 6) {
+function drawWall(mask, radius, thickness, color, g = 6) {
   if (radius + thickness < 0) return;
-  const inner = Math.max(0, radius), outer = radius + thickness, size = TAU / n;
+  const inner = Math.max(0, radius), outer = radius + thickness, { n, start, size } = laneLayout(g);
   ctx.fillStyle = color; ctx.beginPath();
   for (let i = 0; i < n; i++) {
-    if (!(mask & (1 << i))) continue;
-    const a = i * size, b = (i + 1) * size;
+    if (!(mask & (1 << i)) || size[i] <= 0) continue;
+    const a = start[i], b = start[i] + size[i];
     ctx.moveTo(Math.cos(a) * inner, Math.sin(a) * inner);
     ctx.lineTo(Math.cos(a) * outer, Math.sin(a) * outer);
     ctx.lineTo(Math.cos(b) * outer, Math.sin(b) * outer);
@@ -631,16 +633,17 @@ function drawArena(vp, scene, now) {
   ctx.rotate(motionReduced ? 0 : scene.rotation);
   const stage = Math.floor(t / 10) % palette.walls.length;
   const wall = palette.walls[stage];
-  const flip = !motionReduced && Math.floor(beat / 4) % 2, n = scene.sides || 6, size = TAU / n;
+  const flip = !motionReduced && Math.floor(beat / 4) % 2, g = scene.geo || scene.sides || 6, lanes = laneLayout(g), n = lanes.n;
   for (let i = 0; i < n; i++) {
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 1800, i * size, (i + 1) * size); ctx.closePath();
+    if (lanes.size[i] <= 0) continue;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 1800, lanes.start[i], lanes.start[i] + lanes.size[i]); ctx.closePath();
     // An odd side count gets a third shade, so two neighbours never match.
     ctx.fillStyle = n % 2 && i === n - 1 ? mix(palette.bg[0], 0.04) : palette.bg[(i + flip) % 2]; ctx.fill();
   }
-  for (const w of scene.walls) drawWall(w.mask, w.radius, w.thickness, w.thickness > 120 ? mix(wall, 0.12) : wall, n);
+  for (const w of scene.walls) drawWall(w.mask, w.radius, w.thickness, w.thickness > 120 ? mix(wall, 0.12) : wall, g);
   for (const k of scene.pickups || []) {
-    if (k.radius * apothem(n) < ORBIT - 16) continue;
-    const a = (k.sector + 0.5) * size, r = k.radius * hexFactor(a, n);
+    if (k.radius * apothem(g) < ORBIT - 16) continue;
+    const a = laneMid(g, k.sector), r = k.radius * hexFactor(a, g);
     ctx.save(); ctx.translate(Math.cos(a) * r, Math.sin(a) * r); ctx.rotate(now / 300);
     ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.25 + 0.15 * Math.sin(now / 90); hexPath(13); ctx.fill();
     ctx.globalAlpha = 1; hexPath(7); ctx.fill(); ctx.strokeStyle = wall; ctx.lineWidth = 2; ctx.stroke();
@@ -676,9 +679,7 @@ function drawArena(vp, scene, now) {
     }
   }
   const centerPulse = motionReduced ? 1 : 1 + Math.exp(-(beat % 1) * 8) * 0.06;
-  // After a shape change, the center grows back from a point.
-  const grow = scene.shapeAt ? Math.min(1, (now - scene.shapeAt) / 350) : 1;
-  hexPath(49 * centerPulse * (0.3 + 0.7 * grow), n); ctx.fillStyle = palette.center; ctx.fill(); ctx.strokeStyle = scene.edge || palette.edge; ctx.lineWidth = 3; ctx.stroke();
+  hexPath(49 * centerPulse, g); ctx.fillStyle = palette.center; ctx.fill(); ctx.strokeStyle = scene.edge || palette.edge; ctx.lineWidth = 3; ctx.stroke();
   ctx.restore();
 }
 // Battle HUD for one player, drawn in screen space at the top of its viewport.
@@ -761,7 +762,7 @@ function arenaScene(s, index, players, now, visualTime) {
     palette: roundPalette, t: Math.max(0, s.t), beat: sound.beat(now),
     walls: arena.walls.map(w => ({ mask: w.mask, thickness: w.thickness, radius: w.radius + offset })),
     pickups: (arena.pickups || []).map(k => ({ ...k, radius: k.radius + offset })),
-    players, rotation, fog: arena.fogUntil > s.t, sides: arena.sides || 6, shapeAt: shapeChanges.get(index),
+    players, rotation, fog: arena.fogUntil > s.t, geo: geometry(arena),
     zoom: 1 + (players.length === 1 && dying ? (1 - (1 - dying) ** 3) * 0.5 : 0),
     shakeAt: players.length === 1 ? shakes.get(players[0].id) : 0,
   };
@@ -858,7 +859,7 @@ function frame(now) {
           const next = wrap(predictedAngle + dir * TURN_SPEED * dt + adjust);
           // Predict side contact against the walls of our own arena.
           const arena = state.arenas[own.arena], vt = Math.min((now - receivedAt) / 1000, 0.1);
-          const blocked = own.invulnUntil <= state.t && arena.walls.some(w => collides(next, { ...w, radius: w.radius - arena.speed * vt }, arena.sides || 6));
+          const blocked = own.invulnUntil <= state.t && arena.walls.some(w => collides(next, { ...w, radius: w.radius - arena.speed * vt }, geometry(arena)));
           if (!blocked) predictedAngle = next;
         }
         if (now - lastPingAt > 2000) { send({ type: 'ping', at: now }); lastPingAt = now; }

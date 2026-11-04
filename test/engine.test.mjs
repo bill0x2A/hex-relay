@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createRound, stepRound, collides, finishRound, botInput, ORBIT, STEP, SECTOR, TAU, MAX_HP, hexFactor, sectorOf } from '../public/engine.mjs';
+import { createRound, stepRound, collides, finishRound, botInput, ORBIT, STEP, SECTOR, TAU, MAX_HP, hexFactor, sectorOf, geometry } from '../public/engine.mjs';
 
 const players = [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }];
 function steps(s, count, inputs = {}) { for (let i = 0; i < count; i++) stepRound(s, inputs); return s; }
@@ -157,34 +157,36 @@ test('long runs keep a bounded field and every wall leaves an opening', () => {
     assert.ok(s.arenas[0].wallId > 100);
   }
 });
-test('a bot can survive the patterns, so every pattern has a way through', () => {
+test('a perfect bot survives every seed past full speed, so every row has a way through', () => {
+  // The spacing allows exactly the turn a row needs (margin 1 on HYPER), so one bad row would kill the bot.
   for (const difficulty of ['normal', 'hard', 'hyper']) {
-    const times = [];
-    for (let seed = 1; seed <= 6; seed++) {
-      const s = runBots(createRound([players[0]], seed, difficulty, 0), 45);
-      times.push(s.players[0].survived);
+    for (let seed = 1; seed <= 16; seed++) {
+      const s = runBots(createRound([players[0]], seed, difficulty, 0), 110);
+      assert.ok(s.players[0].alive, `${difficulty} seed ${seed}: bot died at ${s.players[0].survived.toFixed(1)} s`);
     }
-    const median = times.sort((a, b) => a - b)[3];
-    assert.ok(median >= 30, `${difficulty} median bot time ${median.toFixed(1)} s: ${times.map(t => t.toFixed(1))}`);
   }
 });
-test('hard and hyper change the center shape, only when the field is empty', () => {
+test('hard and hyper change shape smoothly, with no wall at the orbit while the lanes move', () => {
   for (const difficulty of ['hard', 'hyper']) {
     const s = createRound([players[0]], 9, difficulty, 0), seen = new Set([6]);
-    let last = 6;
+    let morphs = 0, wasMorph = false;
     for (let i = 0; i < 90 / STEP; i++) {
+      const before = s.arenas[0].walls.length;
       stepRound(s, { a: botInput(s, s.players[0]) }); s.players[0].alive = true; s.players[0].hp = 1;
       if (s.phase === 'finished') { s.phase = 'playing'; s.winners = []; }
-      const sides = s.arenas[0].sides;
-      if (sides !== last) {
-        // Every wall in the field is new: it spawned far out, after the change.
-        assert.ok(s.arenas[0].walls.every(w => w.radius > 300), 'the shape changed with walls near the center');
-        last = sides;
+      const arena = s.arenas[0], m = arena.morph;
+      if (m && m.p > 0) {
+        // While the lanes move, every wall is inside the orbit (passed) or outside it (not yet arrived).
+        assert.ok(arena.walls.every(w => w.radius + w.thickness < ORBIT - 5 || w.radius > ORBIT + 5), 'a wall was at the orbit during a shape change');
+        const g = geometry(arena);
+        assert.ok(Math.abs(g.size.reduce((a, b) => a + b, 0) - TAU) < 1e-9);
       }
-      seen.add(sides);
+      if (m && !wasMorph) { morphs++; assert.ok(arena.walls.length >= before - 1, 'walls were removed at a shape change'); }
+      wasMorph = !!m;
+      seen.add(arena.sides);
     }
     assert.ok(seen.has(5) && seen.has(4), `${difficulty} shapes seen: ${[...seen]}`);
-    assert.ok(s.events.some(e => e.type === 'shape') || seen.size > 1);
+    assert.ok(morphs >= 3);
   }
 });
 test('normal keeps the hexagon', () => {

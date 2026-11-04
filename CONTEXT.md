@@ -7,10 +7,12 @@ Use these terms in code, docs, and UI. One word for one meaning.
 - **Arena** — one field of walls around the center hexagon. It has its own walls, wall speed, spin, and random stream. Classic rounds have one shared arena. Battle rounds have one arena for each player.
 - **Orbit** — the circle the triangles move on (`ORBIT`, radius 86).
 - **Sector** — one of the angular slices of an arena (six for a hexagon). A wall covers a set of sectors (`mask`).
-- **Shape** — the number of sides of an arena: 6, 5, or 4. A **shape change** happens only when the field is empty.
+- **Shape** — the number of sides of an arena: 6, 5, or 4. In a **shape change** (a **morph**), one or two sectors shrink to zero width or grow from zero width. The sectors move only while no wall is at the orbit. Walls stay in the field.
+- **Chain** — rows that touch, with no space between them. The triangle turns into the next row while the row before it passes (the corkscrew).
 - **Wall** — one ring segment set that moves in toward the center. It has a `radius`, a `thickness`, and a `mask`.
 - **Row** — one step of a pattern. A row makes one wall, or no wall (a pause).
-- **Pattern** — a named, hand-written list of rows (spiral, ladder, alternating C, zig-zag, tunnel). The spawner turns and mirrors each pattern at random.
+- **Pattern** — a named, hand-written list of rows (spiral, whirl, ladder, alternate, swing, hop, rattle, zig-zag, tunnel). The spawner turns and mirrors each pattern at random.
+- **Margin** — the time a row gives, as a multiple of the turn it needs from the worst position. 1 means exactly enough. The margin gets smaller with each speed step.
 - **Spin** — the turn of the camera around the center. It belongs to the arena, so an attack can change it. Spin does not change collisions.
 - **Speed step** — a jump in wall speed at a milestone (every 10 s).
 - **Milestone** — a named survival time. Solo marks 60 s as **cleared**; the run continues.
